@@ -1,0 +1,124 @@
+<style>
+    /* Always set the map height explicitly to define the size of the div
+     * element that contains the map. */
+    #map {
+        width: 450px;
+        height: 400px;
+
+    }
+
+    /* Optional: Makes the sample page fill the window. */
+    html, body {
+        height: 100%;
+        margin: 10px;
+        padding: 10px;
+        text-align: center;
+    }
+
+    ul, li {
+        list-style: none;
+    }
+</style>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+
+<script type='text/javascript'>
+    var map;
+
+    function initMap() {
+        var _latitude = parseFloat("{{ traffic_node.latitude }}");
+        var _longitude = parseFloat("{{ traffic_node.longitude }}");
+
+        var latlong = new google.maps.LatLng({
+            lat: _latitude,
+            lng: _longitude
+        });
+
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: latlong,
+            zoom: 14,
+            mapTypeId: 'roadmap'
+        });
+        var current_pos_marker = new google.maps.Marker({
+            position: latlong,
+            map: map,
+            animation: google.maps.Animation.DROP,
+            title: "{{ traffic_node.name }}"
+        });
+    }
+</script>
+<script async defer
+        src="http://maps.google.com/maps/api/js?key=AIzaSyDzeaZJ-L4lFjQa7ozJ2D7Fh4PCPc3xmNo&callback=initMap"></script>
+
+<h1>Traffic Regulator-Test</h1>
+
+<form method="post" action="">
+    <h3>Please insert a place that you want to check for traffic around it</h3>
+    <h4>For example: city, province, etc.</h4>
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Search">
+</form>
+
+{% if traffic_node %}
+    <h2>Search for traffic around</h2>
+    <div style="text-align: center">
+
+        <ul>
+            <li><b>{{ traffic_node.name }}</b></li>
+            <li>address: {{ traffic_node.address }}</li>
+            <li>lat: {{ traffic_node.latitude }}, lng: {{ traffic_node.longitude }}</li>
+        </ul>
+    </div>
+    <div class="map" id="map" style="width: 50%; height: 400px; text-align: center;left:25%"></div>
+
+    <div id="search_traffic">
+        {#        <form method="post" action="get_traffic_status">#}
+        {#            {% csrf_token %}#}
+        {#            {{ radius_form }}#}
+        {#            <input type="submit" value="Find traffic">#}
+        {#        </form>#}
+        <p></p>
+        <h4 id="label_traffic_status">Searching for traffic status within 2.5km from here:</h4>
+
+        {#        {% load static %}#}
+        {#        <img src="/static/ajax-loader.gif"/>#}
+        <script>
+            function get_traffic_status() {
+                $.ajax({
+                    type: "POST",
+                    url: "/get_traffic_status",
+                    data: {
+                        'latitude': {{ traffic_node.latitude }},
+                        'longitude': {{ traffic_node.longitude }}
+                    },
+                    success: function (transactions) {
+                        if (transactions.length === 0) {
+                            document.getElementById("label_traffic_status").innerHTML = "Everything looks good, traffic is healthy";
+                        }
+                        else {
+                            document.getElementById("label_traffic_status").innerHTML = "Traffics are marked on the map in a radius of 2.5km";
+                            transactions.forEach(function (tx) {
+                                console.log(tx);
+                                var latlong = new google.maps.LatLng({
+                                    lat: tx['lat'],
+                                    lng: tx['lon']
+                                });
+                                var current_pos_marker = new google.maps.Marker({
+                                    position: latlong,
+                                    draggable: false,
+                                    map: map,
+                                    animation: google.maps.Animation.DROP,
+                                    title: tx['status'],
+                                    label: "!!"
+                                });
+                            });
+                        }
+                    }
+                });
+            }
+
+            get_traffic_status();
+        </script>
+    </div>
+{% endif %}
