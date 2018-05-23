@@ -57,7 +57,7 @@ npm start
 # Previews
 The Web portal exists at http://localhost:7777
 
-[!alt text](https://raw.githubusercontent.com/benuha/IOTA-DeTraffic-regulator/master/images/iota_traffic_regulator_2.png)
+![alt text](https://raw.githubusercontent.com/benuha/IOTA-DeTraffic-regulator/master/images/iota_traffic_regulator_2.png)
 
 
 # License
